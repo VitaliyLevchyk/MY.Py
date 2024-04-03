@@ -1,0 +1,94 @@
+import pygame
+import sys
+import random
+
+pygame.init()
+
+# Задаємо розміри екрану та інші константи
+width, height = 800, 600
+cell_size = 20
+fps = 10
+
+# Кольори
+white = (120, 255, 255)
+black = (0, 100, 0)
+red = (255, 255, 0)
+
+# Створення вікна
+screen = pygame.display.set_mode((width, height))
+pygame.display.set_caption("Гра Змійка в 360")
+
+# Початкові координати змійки та її рух
+snake = [(width // 2, height // 2)]
+direction = (1, 0)
+
+# Початкові координати їжі
+food = (random.randint(0, width // cell_size - 1) * cell_size,
+        random.randint(0, height // cell_size - 1) * cell_size)
+
+# Початкові координати перешкод
+obstacles = [(random.randint(0, width // cell_size - 1) * cell_size,
+              random.randint(0, height // cell_size - 1) * cell_size) for _ in range(10)]
+
+# Основний цикл гри
+clock = pygame.time.Clock()
+
+while True:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_UP and direction != (0, 1):
+                direction = (0, -1)
+            elif event.key == pygame.K_DOWN and direction != (0, -1):
+                direction = (0, 1)
+            elif event.key == pygame.K_LEFT and direction != (1, 0):
+                direction = (-1, 0)
+            elif event.key == pygame.K_RIGHT and direction != (-1, 0):
+                direction = (1, 0)
+
+    # Рух змійки
+    x, y = snake[0]
+    x += direction[0] * cell_size
+    y += direction[1] * cell_size
+
+    # Перевірка на зіткнення з межами екрану
+    if x < 0 or x >= width or y < 0 or y >= height:
+        pygame.quit()
+        sys.exit()
+
+    # Перевірка на зіткнення з самою собою або з перешкодами
+    if (x, y) in snake[1:] or (x, y) in obstacles:
+        pygame.quit()
+        sys.exit()
+
+    # Перевірка на з'їдання їжі
+    if (x, y) == food:
+        food = (random.randint(0, width // cell_size - 1) * cell_size,
+                random.randint(0, height // cell_size - 1) * cell_size)
+    else:
+        # Видалення хвоста
+        snake.pop()
+
+    # Додавання нової голови
+    snake.insert(0, (x, y))
+
+    # Відображення на екрані
+    screen.fill(black)
+
+    # Відображення змійки
+    for segment in snake:
+        pygame.draw.rect(screen, white, (segment[0], segment[1], cell_size, cell_size))
+
+    # Відображення їжі
+    pygame.draw.rect(screen, red, (food[0], food[1], cell_size, cell_size))
+
+    # Відображення перешкод
+    for obstacle in obstacles:
+        pygame.draw.rect(screen, white, (obstacle[0], obstacle[1], cell_size, cell_size))
+
+    pygame.display.flip()
+
+    # Встановлення частоти кадрів на секунду
+    clock.tick(fps)
